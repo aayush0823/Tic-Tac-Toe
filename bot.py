@@ -94,7 +94,7 @@ class Bot:
 			blockHeur += self.pattern_checker(flag,block,pos_arr)
 
 		# Finally, contribution of place (for settling tie-breakers, etc)
-		for i in xrange(4):
+		for i in xrange(4):l
 			for j in xrange(4):
 				if block[i][j] == flag:
 					blockHeur += 0.1 * self.pos_weight[i][j]
