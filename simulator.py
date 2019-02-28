@@ -37,7 +37,6 @@ class Random_Player():
         cells = board.find_valid_move_cells(old_move)
         return cells[random.randrange(len(cells))]
 
-
 from copy import deepcopy
 import random
 import sys
@@ -54,32 +53,32 @@ class bot:
         self.startTime = 0                                                                        # Starting time of game
         self.timeLimit = 23.5                                                                     # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
-        self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
+        # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
-        self.blockHash = [[[long(0) for j in xrange(3)] for i in xrange(3)] for k in xrange(2)]   # Hash for block
-        self.blockpoint = 9;
+        self.blockHash = [[[long(0) for j in xrange(3)] for i in xrange(3)] for k in xrange(2)]   # Hash for blocks
+        self.blockpoint = 9;                                                                      # Points for winning a block
         self.boardHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for board
         self.blockHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for 3 * 3 block 
-        self.patterns = [];                                                                       # Patterns for winning in smallboard
+        # self.patterns = [];                                                                       # Patterns for winning in smallboard
         
-        # Straight Line Patterns (for both rows and columns)
-        for i in xrange(3):
-            row_array = [];                            # For the i th row
-            col_array = [];                            # For i th column
-            for j in xrange(3):
-                row_array.append((i, j));
-                col_array.append((j, i));
-            self.patterns.append(row_array);
-            self.patterns.append(col_array);    
+        # # Straight Line Patterns (for both rows and columns)
+        # for i in xrange(3):
+        #     row_array = [];                            # For the i th row
+        #     col_array = [];                            # For i th column
+        #     for j in xrange(3):
+        #         row_array.append((i, j));
+        #         col_array.append((j, i));
+        #     self.patterns.append(row_array);
+        #     self.patterns.append(col_array);    
                 
-        diagonal1_array = [(0, 0), (1, 1), (2, 2)];    # Pattern for first diagonal
-        diagonal2_array = [(2, 0), (1, 1), (0, 2)];    # Pattern for second diagonal
+        # diagonal1_array = [(0, 0), (1, 1), (2, 2)];    # Pattern for first diagonal
+        # diagonal2_array = [(2, 0), (1, 1), (0, 2)];    # Pattern for second diagonal
 
-        self.patterns.append(diagonal1_array);
-        self.patterns.append(diagonal2_array);
+        # self.patterns.append(diagonal1_array);
+        # self.patterns.append(diagonal2_array);
 
         # Hash for each (position(x, y), board, player)
-        self.rand_table = [[[[long(0) for i in xrange(2)] for j in xrange(2)] for k in xrange(9)] for l in xrange(9)]
+        self.rand_table = [[[[long(0) for i in xrange(2)] for j in xrange(9)] for k in xrange(9)] for l in xrange(2)]
         
         self.hash_init();
                 
@@ -95,7 +94,7 @@ class bot:
             for j in xrange(9):
                 for k in xrange(2):
                     for l in xrange(2):
-                        self.rand_table[i][j][k][l] = long(random.randint(1, 2**64));
+                        self.rand_table[k][i][j][l] = long(random.randint(1, 2**64));
 
     # NOT operation on flag
     def oppFlag(self, flag):
@@ -105,13 +104,12 @@ class bot:
     # Calculate updated board and block hash after making the move in cell                  
     def addMovetoHash(self, cell, player):
 
+        # cell[0] = board number, cell[1] = x, cell[2] = y
         # Player = 0 means oponent, player = 1 means us
-        move_x = cell[1];
-        move_y = cell[2];
 
         # Updating Hash for board and block
-        self.boardHash ^= self.rand_table[move_x][move_y][cell[0]][player];
-        self.blockHash[cell[0]][move_x / 3][move_y / 3] ^= self.rand_table[move_x][move_y][cell[0]][player];
+        self.boardHash ^= self.rand_table[cell[0]][cell[1]][cell[2]][player];
+        self.blockHash[cell[0]][cell[1] / 3][cell[2] / 3] ^= self.rand_table[cell[0]][cell[1]][cell[2]][player];
 
     def sig_handler(self, signum, frame):
         raise Exception("timeout")
@@ -223,17 +221,17 @@ class bot:
         loseSteps = 4;
         winSteps = 4;
 
-        loseHash = [0 for i in xrange(4)];
-        winHash = [0 for i in xrange(4)];
+        loseHash = [0 for i in xrange(5)];
+        winHash = [0 for i in xrange(5)];
 
         # Calculation for rows
         for i in xrange(3):
             count1 = 0;
             count2 = 0;
             for j in xrange(3):
-                if block[board_num][i+start_x][j+start_y] == flag:
+                if block.big_boards_status[board_num][i+start_x][j+start_y] == flag:
                     count1 += 1;
-                elif block[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
+                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
                     count2 += 1;
             if count2 == 0:
                 if count1 == 0:
@@ -251,9 +249,9 @@ class bot:
             count1 = 0;
             count2 = 0;
             for i in xrange(3):
-                if block[board_num][i+start_x][j+start_y] == flag:
+                if block.big_boards_status[board_num][i+start_x][j+start_y] == flag:
                     count1 += 1;
-                elif block[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
+                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
                     count2 += 1;
             if count2 == 0:
                 if count1 == 0:
@@ -270,9 +268,9 @@ class bot:
         count1 = 0;
         count2 = 0;
         for i in xrange(3):
-            if block[board_num][i+start_x][i+start_y] == flag:
+            if block.big_boards_status[board_num][i+start_x][i+start_y] == flag:
                 count1 += 1;
-            elif block[board_num][i+start_x][i+start_y] == self.oppFlag(flag):
+            elif block.big_boards_status[board_num][i+start_x][i+start_y] == self.oppFlag(flag):
                 count2 += 1;
         if count2 == 0:
             if count1 == 0:
@@ -289,9 +287,9 @@ class bot:
         count1 = 0;
         count2 = 0;
         for i in xrange(3):
-            if block[board_num][i+start_x][2+start_y - i] == flag:
+            if block.big_boards_status[board_num][i+start_x][2+start_y - i] == flag:
                 count1 += 1;
-            elif block[board_num][i+start_x][2+start_y - i] == self.oppFlag(flag):
+            elif block.big_boards_status[board_num][i+start_x][2+start_y - i] == self.oppFlag(flag):
                 count2 += 1;
         if count2 == 0:
             if count1 == 0:
@@ -304,7 +302,7 @@ class bot:
                 loseSteps = min(loseSteps, 3 - count2);
                 loseHash[3 - count2] += 1;
 
-        return self.pos_weight[start_x/3][start_y/3] * (2 ** (loseSteps - winSteps + 3) + winHash[winSteps] - loseHash[loseSteps]);                                         
+        return self.pos_weight[start_x / 3][start_y / 3] * (2 ** (loseSteps - winSteps + 3) + winHash[winSteps] - loseHash[loseSteps]);                                         
 
     # Function to assign heuristic value to a board state   
     def heuristic(self, flag, board):
@@ -338,6 +336,7 @@ class bot:
                             
     # Minimax function with alpha - beta prunnning to explore achievable states in time limit   
     def minimax(self, board, flag, depth, maxDepth, alpha, beta, old_move):
+
         checkGoal = board.find_terminal_state()
 
         if checkGoal[1] == 'WON':
@@ -348,18 +347,19 @@ class bot:
         elif checkGoal[1] == 'DRAW':
             return -100000, 0
 
+            
+
         if depth == maxDepth:
             return self.heuristic(self.who, board) , 0
 
         validCells = board.find_valid_move_cells(old_move)
         random.shuffle(validCells)
-
+        if time() - self.startTime > self.timeLimit:
+            return validCells[0]
         if flag == self.who:
             isMax = 1;
         else: 
             isMax = 0;
-
-        board_copy = deepcopy(board)
 
         if isMax:
             maxVal = float("-inf")
@@ -367,17 +367,19 @@ class bot:
             for i in xrange(len(validCells)):
 
                 cell = validCells[i]
-                board_copy.update(old_move,cell,flag)
-                self.addMovetoHash(cell,1)
+                board.update(old_move, cell, flag)
+                self.addMovetoHash(cell, 1)
 
-                val = self.minimax(board_copy,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
-                del(board_copy)
+                val = self.minimax(board,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
 
                 if val > maxVal:
                     maxVal = val
                     maxInd = i
                 if maxVal > alpha:
                     alpha = maxVal
+
+                board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
+                board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
                 self.addMovetoHash(cell,1)
                 if beta <= alpha:
@@ -390,16 +392,19 @@ class bot:
             for i in xrange(len(validCells)):
 
                 cell = validCells[i]
-                board_copy.update(old_move,cell,flag)
-                self.addMovetoHash(cell,0)
+                board.update(old_move, cell, flag)
+                self.addMovetoHash(cell, 0)
 
-                val = self.minimax(board_copy,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
+                val = self.minimax(board,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
 
                 if val < minVal:
                     minVal = val
                     minInd = i
                 if minVal < beta:
                     beta = minVal
+
+                board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
+                board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
                 self.addMovetoHash(cell,0)
                 if beta <= alpha:
@@ -415,32 +420,27 @@ class bot:
             return (0, 4, 4)
         else:
             if board.big_boards_status[old_move[0]][old_move[1]][old_move[2]] == self.oppFlag(flag):
-                self.addMovetoHash( old_move, 0)
+                self.addMovetoHash(old_move, 0)
 
         self.who = flag
 
-        maxDepth = 30
+        maxDepth = 3
 
         validCells = board.find_valid_move_cells(old_move)
         random.shuffle(validCells)
         bestMove = validCells[0]
 
-        try:
-            while True:
-                print maxDepth
-                self.boardHashSafeCopy = self.boardHash
-                self.blockHashSafeCopy = deepcopy(self.blockHash)
-                b = deepcopy(board)
-                if (time() - self.startTime) < self.timeLimit:
-                    move = self.minimax(b, flag, 0, maxDepth, float("-inf"), float("inf"), old_move)[1]
-                    bestMove = move
-                    maxDepth += 1
-                del b
-
-        except Exception as e:
-            self.boardHash = self.boardHashSafeCopy
-            self.blockHash = deepcopy(self.blockHashSafeCopy)
-            pass
+        while True:
+            self.boardHashSafeCopy = self.boardHash
+            self.blockHashSafeCopy = deepcopy(self.blockHash)
+            b = deepcopy(board)
+            if (time() - self.startTime) < self.timeLimit:
+                move = self.minimax(b, flag, 0, maxDepth, float("-inf"), float("inf"), old_move)[1]
+                bestMove = move
+                maxDepth += 1
+            else:
+                break    
+            del b
 
         self.addMovetoHash( bestMove, 1);
         return bestMove
