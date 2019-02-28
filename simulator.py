@@ -54,8 +54,10 @@ class bot:
         self.is_bonus = 0                                                                         # Check if there is bonus move
         self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
-        self.blockHash = [[[long(0) for j in xrange(2)] for i in xrange(3)] for k in xrange(3)]   # Hash for block
-        self.blockpoint = 27;                                                                     # Points for winning a block
+        self.blockHash = [[[long(0) for j in xrange(3)] for i in xrange(3)] for k in xrange(2)]   # Hash for block
+        self.blockpoint = 9;
+        self.boardHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for board
+        self.blockHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for 3 * 3 block 
         self.patterns = [];                                                                       # Patterns for winning in smallboard
         
         # Straight Line Patterns (for both rows and columns)
@@ -107,7 +109,7 @@ class bot:
 
         # Updating Hash for board and block
         self.boardHash ^= self.rand_table[move_x][move_y][boardno][player];
-        self.blockHash[move_x / 3][move_y / 3][boardno] ^= self.rand_table[move_x][move_y][boardno][player];
+        self.blockHash[boardno][move_x / 3][move_y / 3] ^= self.rand_table[move_x][move_y][boardno][player];
 
     def sig_handler(self, signum, frame):
         raise Exception("timeout")
@@ -116,10 +118,10 @@ class bot:
         #returns the valid cells allowed given the last move and the current board state
         
         allowed_cells = []
-        allowed_small_board = [old_move[1]%3, old_move[2]%3]
+        allowed_small_board = [old_move[1] % 3, old_move[2] % 3]
         #checks if the move is a free move or not based on the rules
 
-        if old_move == (-1,-1,-1) or (self.small_boards_status[0][allowed_small_board[0]][allowed_small_board[1]] != '-' and self.small_boards_status[1][allowed_small_board[0]][allowed_small_board[1]] != '-'):
+        if old_move == (-1, -1, -1) or (self.small_boards_status[0][allowed_small_board[0]][allowed_small_board[1]] != '-' and self.small_boards_status[1][allowed_small_board[0]][allowed_small_board[1]] != '-'):
             for k in range(2):
                 for i in range(9):
                     for j in range(9):
@@ -213,10 +215,125 @@ class bot:
         self.small_boards_status[k][x][y] = 'd'
         return 'SUCCESSFUL', False
 
+    # Function to calculate utility of a single 3 * 3 smallboard    
+    def block_heuristic(self, block, flag, block_x, block_y):
+
+        loseSteps = 4;
+        winSteps = 4;
+
+        loseHash = [0 for i in xrange(4)];
+        winHash = [0 for i in xrange(4)];
+
+        # Calculation for rows
+        for i in xrange(3):
+            count1 = 0;
+            count2 = 0;
+            for j in xrange(3):
+                if block[i][j] == flag:
+                    count1 += 1;
+                elif block[i][j] == self.oppFlag(flag):
+                    count2 += 1;
+            if count2 == 0:
+                if count1 == 0:
+                    loseSteps = min(loseSteps, 3);
+                    loseHash[3] += 1; 
+                winSteps = min(winSteps, 3 - count1);
+                winHash[3 - count1] += 1;    
+            else:
+                if count1 == 0:
+                    loseSteps = min(loseSteps, 3 - count2);
+                    loseHash[3 - count2] += 1;
+
+        # Calculation for columns            
+        for j in xrange(3):
+            count1 = 0;
+            count2 = 0;
+            for i in xrange(3):
+                if block[i][j] == flag:
+                    count1 += 1;
+                elif block[i][j] == self.oppFlag(flag):
+                    count2 += 1;
+            if count2 == 0:
+                if count1 == 0:
+                    loseSteps = min(loseSteps, 3);
+                    loseHash[3] += 1;
+                winSteps = min(winSteps, 3 - count1);
+                winHash[3 - count1] += 1;
+            else:
+                if count1 == 0:
+                    loseSteps = min(loseSteps, 3 - count2);
+                    loseHash[3 - count2] += 1;            
+
+        # Calculation for first diagonal            
+        count1 = 0;
+        count2 = 0;
+        for i in xrange(3):
+            if block[i][i] == flag:
+                count1 += 1;
+            elif block[i][i] == self.oppFlag(flag):
+                count2 += 1;
+        if count2 == 0:
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3);
+                loseHash[3] += 1;
+            winSteps = min(winSteps, 3 - count1);
+            winHash[3 - count1] += 1;
+        else:
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3 - count2);
+                loseHash[3 - count2] += 1;
+
+        # Calculation for second diagonal            
+        count1 = 0;
+        count2 = 0;
+        for i in xrange(3):
+            if block[i][2 - i] == flag:
+                count1 += 1;
+            elif block[i][2 - i] == self.oppFlag(flag):
+                count2 += 1;
+        if count2 == 0:
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3);
+                loseHash[3] += 1;
+            winSteps = min(winSteps, 3 - count1);
+            winHash[3 - count1] += 1;
+        else:
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3 - count2);
+                loseHash[3 - count2] += 1;
+
+        return self.pos_weight[block_x][block_y] * (2 ** (loseSteps - winSteps + 3) + winHash[winSteps] - loseHash[loseSteps]);                                         
+
     # Function to assign heuristic value to a board state   
     def heuristic(self, who, board):
-        return rand() % 10;
+        
+        if (self.boardHash, flag) in self.boardHeuriStore:
+            return self.boardHeuriStore[(self.boardHash, flag)]
 
+        blockHeuristic = [[[0 for i in xrange(3)] for j in xrange(3)] for k in xrange(2)];
+        blockHeuristicSum = 0;
+
+        # Calculate heuristics for every 3 * 3 block in both the big boards
+        for i in xrange(3):
+            for j in xrange(3):
+                for k in xrange(2):
+                    if self.small_boards_status[k][i][j] == flag:
+                        blockHeuristic[k][i][j] = self.pos_weight[i][j] * self.blockpoint;
+                    elif self.small_boards_status[k][i][j] == self.oppFlag(flag):
+                        blockHeuristic[k][i][j] = - (self.pos_weight[i][j] * self.blockpoint);
+                    elif self.small_boards_status[k][i][j] == 'd':
+                        blockHeuristic[k][i][j] = 0;
+                    else:
+                        if (self.blockHash[k][i][j], flag) in self.blockHeuriStore:
+                            blockHeuristic[k][i][j] = self.blockHeuriStore[(self.blockHash[k][i][j], flag)]
+                        else:
+                            blockHeuristic[k][i][j] = self.block_heuristic(self.small_boards_status, flag, i, j);
+                            self.blockHeuriStore[(self.blockHash[k][i][j], flag)] = blockHeuristic[k][i][j];
+                    blockHeuristicSum += blockHeuristic[k][i][j];                    
+
+        return blockHeuristicSum;            
+                            
+                            
     # Minimax function with alpha - beta prunnning to explore achievable states in time limit   
     def minimax(self, board, flag, depth, maxDepth, alpha, beta, old_move):
 
