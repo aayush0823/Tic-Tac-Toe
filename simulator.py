@@ -51,7 +51,7 @@ class bot:
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 23.5                                                                     # Maximum time for single move
+        self.timeLimit = 0.001                                                                     # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
@@ -430,6 +430,7 @@ class bot:
         random.shuffle(validCells)
         bestMove = validCells[0]
 
+        # try:
         while True:
             self.boardHashSafeCopy = self.boardHash
             self.blockHashSafeCopy = deepcopy(self.blockHash)
@@ -441,6 +442,11 @@ class bot:
             else:
                 break    
             del b
+
+        # except Exception as e:
+        #     self.boardHash = self.boardHashSafeCopy
+        #     self.blockHash = deepcopy(self.blockHashSafeCopy)
+        #     pass
 
         self.addMovetoHash( bestMove, 1);
         return bestMove

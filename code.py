@@ -12,7 +12,7 @@ class bot:
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 23.5                                                                     # Maximum time for single move
+        self.timeLimit = 0.01                                                                     # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
@@ -311,7 +311,6 @@ class bot:
             
 
         if depth == maxDepth:
-            print "shit"
             return self.heuristic(self.who, board) , 0
 
         validCells = board.find_valid_move_cells(old_move)
