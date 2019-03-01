@@ -6,18 +6,18 @@ import time
 import signal
 from time import time
 
-class bot2:
+class botq:
 
     def __init__(self):
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 0.0005                                                                     # Maximum time for single move
+        self.timeLimit = 1                                                                  # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
         self.blockHash = [[[long(0) for j in xrange(3)] for i in xrange(3)] for k in xrange(2)]   # Hash for blocks
-        self.blockpoint = 9;                                                                      # Points for winning a block
+        self.blockpoint = 10000;                                                                      # Points for winning a block
         self.boardHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for board
         self.blockHeuriStore = {}                                                                 # Dictionary to store hash values and heuristic for 3 * 3 block 
         # self.patterns = [];                                                                       # Patterns for winning in smallboard
@@ -136,12 +136,10 @@ class bot2:
         elif cntx+cnto+cntd == 18:                          #if game is drawn
             return ('NONE', 'DRAW')
 
-    def update(self, old_move, new_move, ply):
+    def update(self, old_move, new_move, ply, board):
         #updating the game board and small_board status as per the move that has been passed in the arguements
         
-        if(self.check_valid_move(old_move, new_move)) == False:
-            return 'UNSUCCESSFUL', False
-        self.big_boards_status[new_move[0]][new_move[1]][new_move[2]] = ply
+        board.big_boards_status[new_move[0]][new_move[1]][new_move[2]] = ply
 
         x = new_move[1]/3
         y = new_move[2]/3
@@ -149,37 +147,37 @@ class bot2:
         fl = 0
 
         #checking if a small_board has been won or drawn or not after the current move
-        bs = self.big_boards_status[k]
+        bs = board.big_boards_status[k]
         for i in range(3):
             #checking for horizontal pattern(i'th row)
             if (bs[3*x+i][3*y] == bs[3*x+i][3*y+1] == bs[3*x+i][3*y+2]) and (bs[3*x+i][3*y] == ply):
-                self.small_boards_status[k][x][y] = ply
+                board.small_boards_status[k][x][y] = ply
                 return 'SUCCESSFUL', True
             #checking for vertical pattern(i'th column)
             if (bs[3*x][3*y+i] == bs[3*x+1][3*y+i] == bs[3*x+2][3*y+i]) and (bs[3*x][3*y+i] == ply):
-                self.small_boards_status[k][x][y] = ply
+                board.small_boards_status[k][x][y] = ply
                 return 'SUCCESSFUL', True
         #checking for diagonal patterns
         #diagonal 1
         if (bs[3*x][3*y] == bs[3*x+1][3*y+1] == bs[3*x+2][3*y+2]) and (bs[3*x][3*y] == ply):
-            self.small_boards_status[k][x][y] = ply
+            board.small_boards_status[k][x][y] = ply
             return 'SUCCESSFUL', True
         #diagonal 2
         if (bs[3*x][3*y+2] == bs[3*x+1][3*y+1] == bs[3*x+2][3*y]) and (bs[3*x][3*y+2] == ply):
-            self.small_boards_status[k][x][y] = ply
+            board.small_boards_status[k][x][y] = ply
             return 'SUCCESSFUL', True
         #checking if a small_board has any more cells left or has it been drawn
         for i in range(3):
             for j in range(3):
                 if bs[3*x+i][3*y+j] =='-':
                     return 'SUCCESSFUL', False
-        self.small_boards_status[k][x][y] = 'd'
+        board.small_boards_status[k][x][y] = 'd'
         return 'SUCCESSFUL', False
 
     #Function to calculate utility of both the boards together    
     def board_heuristic(self, board, flag):
 
-        ans = 0
+        ans = [0,0]
         #Calculation for rows
         for k in xrange(2):
             countp = 0
@@ -195,9 +193,24 @@ class bot2:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - (2**(self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]))
+                        value = 0;
+                        for j in xrange(3):
+                            if board.small_boards_status[k][i][j] == self.oppFlag(flag):
+                                value += 4;
+                            else:
+                                value += self.blockH[0][k][i][j] - self.blockH[1][k][i][j] 
+
+                        ans[k] += - (2**value + value**2)
+
                     elif countp != 0 and counto == 0:    
-                        ans += (2**(self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) )    
+                        value = 0;
+                        for j in xrange(3):
+                            if board.small_boards_status[k][i][j] == flag:
+                                value += 4;
+                            else:
+                                value += self.blockH[1][k][i][j] - self.blockH[0][k][i][j] 
+
+                        ans[k] += (2**value + value**2)
 
         #Calculation for columns
         for k in xrange(2):
@@ -214,10 +227,24 @@ class bot2:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - (2**(self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]))
+                        value = 0;
+                        for i in xrange(3):
+                            if board.small_boards_status[k][i][j] == self.oppFlag(flag):
+                                value += 4;
+                            else:
+                                value += self.blockH[0][k][i][j] - self.blockH[1][k][i][j] 
+
+                        ans[k] += - (2**value + value**2)
+
                     elif countp != 0 and counto == 0:    
-                        ans += (2**(self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) )    
-                        
+                        value = 0;
+                        for i in xrange(3):
+                            if board.small_boards_status[k][i][j] == flag:
+                                value += 4;
+                            else:
+                                value += self.blockH[1][k][i][j] - self.blockH[0][k][i][j] 
+
+                        ans[k] += (2**value + value**2)
         #Calculation for first diagonal
         for k in xrange(2):
             countp = 0
@@ -232,10 +259,25 @@ class bot2:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - (2**(self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]))
+                    value = 0;
+                    for i in xrange(3):
+                        if board.small_boards_status[k][i][i] == self.oppFlag(flag):
+                            value += 4;
+                        else:
+                            value += self.blockH[0][k][i][i] - self.blockH[1][k][i][j] 
+
+                    ans[k] += - (2**value + value**2)
+
                 elif countp != 0 and counto == 0:    
-                    ans += (2**(self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]))  
-                        
+                    value = 0;
+                    for j in xrange(3):
+                        if board.small_boards_status[k][i][i] == flag:
+                            value += 4;
+                        else:
+                            value += self.blockH[1][k][i][i] - self.blockH[0][k][i][j] 
+
+                    ans[k] += (2**value + value**2)
+
         #Calculation for second diagonal
         for k in xrange(2):
             countp = 0
@@ -250,11 +292,25 @@ class bot2:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - (2 ** (self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]))
+                    value = 0;
+                    for j in xrange(3):
+                        if board.small_boards_status[k][2-j][j] == self.oppFlag(flag):
+                            value += 4;
+                        else:
+                            value += self.blockH[0][k][2-j][j] - self.blockH[1][k][i][j] 
+
+                    ans[k] += - (2**value + value**2)
+
                 elif countp != 0 and counto == 0:    
-                    ans += (2 ** (self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]))  
-           
-        return ans   
+                    value = 0;
+                    for j in xrange(3):
+                        if board.small_boards_status[k][2-j][j] == flag:
+                            value += 4;
+                        else:
+                            value += self.blockH[1][k][2-j][j] - self.blockH[0][k][i][j] 
+
+                    ans[k] += (2**value + value**2)
+        return max(ans[0],ans[1])**2 + min(ans[0],ans[1]);   
 
     # Function to calculate utility of a single 3 * 3 smallboard    
     def block_heuristic(self, block, flag, start_x, start_y, board_num):
@@ -270,122 +326,115 @@ class bot2:
             count1 = 0;
             count2 = 0;
             for j in xrange(3):
-                if block.big_boards_status[board_num][i+start_x][j+start_y] == flag:
+                if block.big_boards_status[board_num][i+start_x][j+start_y] == self.who:
                     count1 += 1;
-                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
+                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(self.who):
                     count2 += 1;
             if count2 == 0:
-                if count1 == 0:
-                    loseSteps = min(loseSteps, 3);
-                    loseHash[3] += 1; 
                 winSteps = min(winSteps, 3 - count1);
                 winHash[3 - count1] += 1;    
-            else:
-                if count1 == 0:
-                    loseSteps = min(loseSteps, 3 - count2);
-                    loseHash[3 - count2] += 1;
+
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3 - count2);
+                loseHash[3 - count2] += 1;
 
         # Calculation for columns            
         for j in xrange(3):
             count1 = 0;
             count2 = 0;
             for i in xrange(3):
-                if block.big_boards_status[board_num][i+start_x][j+start_y] == flag:
+                if block.big_boards_status[board_num][i+start_x][j+start_y] == self.who:
                     count1 += 1;
-                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(flag):
+                elif block.big_boards_status[board_num][i+start_x][j+start_y] == self.oppFlag(self.who):
                     count2 += 1;
             if count2 == 0:
-                if count1 == 0:
-                    loseSteps = min(loseSteps, 3);
-                    loseHash[3] += 1;
                 winSteps = min(winSteps, 3 - count1);
-                winHash[3 - count1] += 1;
-            else:
-                if count1 == 0:
-                    loseSteps = min(loseSteps, 3 - count2);
-                    loseHash[3 - count2] += 1;            
+                winHash[3 - count1] += 1;    
+
+            if count1 == 0:
+                loseSteps = min(loseSteps, 3 - count2);
+                loseHash[3 - count2] += 1;          
 
         # Calculation for first diagonal            
         count1 = 0;
         count2 = 0;
         for i in xrange(3):
-            if block.big_boards_status[board_num][i+start_x][i+start_y] == flag:
+            if block.big_boards_status[board_num][i+start_x][i+start_y] == self.who:
                 count1 += 1;
-            elif block.big_boards_status[board_num][i+start_x][i+start_y] == self.oppFlag(flag):
+            elif block.big_boards_status[board_num][i+start_x][i+start_y] == self.oppFlag(self.who):
                 count2 += 1;
         if count2 == 0:
-            if count1 == 0:
-                loseSteps = min(loseSteps, 3);
-                loseHash[3] += 1;
-            winSteps = min(winSteps, 3 - count1);
-            winHash[3 - count1] += 1;
-        else:
-            if count1 == 0:
-                loseSteps = min(loseSteps, 3 - count2);
-                loseHash[3 - count2] += 1;
+                winSteps = min(winSteps, 3 - count1);
+                winHash[3 - count1] += 1;    
+
+        if count1 == 0:
+            loseSteps = min(loseSteps, 3 - count2);
+            loseHash[3 - count2] += 1;
 
         # Calculation for second diagonal            
         count1 = 0;
         count2 = 0;
         for i in xrange(3):
-            if block.big_boards_status[board_num][i+start_x][2+start_y - i] == flag:
+            if block.big_boards_status[board_num][i+start_x][2+start_y - i] == self.who:
                 count1 += 1;
-            elif block.big_boards_status[board_num][i+start_x][2+start_y - i] == self.oppFlag(flag):
+            elif block.big_boards_status[board_num][i+start_x][2+start_y - i] == self.oppFlag(self.who):
                 count2 += 1;
         if count2 == 0:
-            if count1 == 0:
-                loseSteps = min(loseSteps, 3);
-                loseHash[3] += 1;
-            winSteps = min(winSteps, 3 - count1);
-            winHash[3 - count1] += 1;
-        else:
-            if count1 == 0:
-                loseSteps = min(loseSteps, 3 - count2);
-                loseHash[3 - count2] += 1;
+                winSteps = min(winSteps, 3 - count1);
+                winHash[3 - count1] += 1;    
 
-        if winSteps == 0:        
-            self.blockH[0][board_num][start_x / 3][start_y / 3] = 4
-        else:
-            self.blockH[0][board_num][start_x / 3][start_y / 3] = winSteps
-        if loseSteps == 0:     
-            self.blockH[1][board_num][start_x / 3][start_y / 3] = 4       
-        else:
-            self.blockH[1][board_num][start_x / 3][start_y / 3] = loseSteps
+        if count1 == 0:
+            loseSteps = min(loseSteps, 3 - count2);
+            loseHash[3 - count2] += 1;
 
-        return self.pos_weight[start_x / 3][start_y / 3] * (2 ** (loseSteps - winSteps + 3) + winHash[winSteps] - loseHash[loseSteps]);                                         
+        self.blockH[0][board_num][start_x / 3][start_y / 3] = winSteps
+        self.blockH[1][board_num][start_x / 3][start_y / 3] = loseSteps
 
+        # print winSteps, loseSteps
+        return winSteps,loseSteps;                                         
+
+    def count1(self, board, x, y):
+        ans = 0
+        m1 = 100
+        for k in xrange(2):
+            m2 = 0
+            for i in xrange(3):
+                for j in xrange(3):
+                    if board.big_boards_status[k][x + i][y + j] == self.oppFlag(self.who):
+                        m2 += 1
+            if m2 < m1:
+                m2 = m1
+                ans = k
+        return ans        
+
+    def count(self,flag,board_num, board):
+        output = 0;
+        for i in xrange(9):
+            for j in xrange(9):
+                if board.big_boards_status[board_num][i][j] == self.who:
+                    output +=1;
+        return output;
+    
     # Function to assign heuristic value to a board state   
-    def heuristic(self, flag, board):
-        
-        if (self.boardHash, flag) in self.boardHeuriStore:
-            return self.boardHeuriStore[(self.boardHash, flag)]
-
-        blockHeuristic = [[[0 for i in xrange(3)] for j in xrange(3)] for k in xrange(2)];
-        blockHeuristicSum = 0;
-
-        # Calculate heuristics for every 3 * 3 block in both the big boards
-        for i in xrange(3):
-            for j in xrange(3):
-                for k in xrange(2):
-                    if self.small_boards_status[k][i][j] == flag:
-                        blockHeuristic[k][i][j] = self.pos_weight[i][j] * self.blockpoint;
-                    elif self.small_boards_status[k][i][j] == self.oppFlag(flag):
-                        blockHeuristic[k][i][j] = - (self.pos_weight[i][j] * self.blockpoint);
-                    elif self.small_boards_status[k][i][j] == 'd':
-                        blockHeuristic[k][i][j] = 0;
-                    else:
-                        if (self.blockHash[k][i][j], flag) in self.blockHeuriStore:
-                            blockHeuristic[k][i][j] = self.blockHeuriStore[(self.blockHash[k][i][j], flag)]
-                        else:
-                            blockHeuristic[k][i][j] = self.block_heuristic(board, flag, 3*i, 3*j,k);
-                            self.blockHeuriStore[(self.blockHash[k][i][j], flag)] = blockHeuristic[k][i][j];
-                    blockHeuristicSum += blockHeuristic[k][i][j];                    
-        
-        if (self.boardHash, flag) in self.boardHeuriStore:
-            return self.boardHeuriStore[(self.boardHash, flag)] + blockHeuristicSum        
-        else:
-            self.boardHeuriStore[(self.boardHash, flag)] = self.board_heuristic(board, flag)
-            return self.boardHeuriStore[(self.boardHash, flag)] + blockHeuristicSum        
+    def heuristic(self, flag, board,cell):
+        [win1,lose1] = self.block_heuristic(board,flag,(cell[1]/3) * 3,(cell[2]/3) * 3,cell[0]);
+        # board.big_boards_status[cell[0]][cell[1]][cell[2]] = flag
+        no =0;
+        self.update([1, 1, 1], cell, flag, board)
+        validCells = board.find_valid_move_cells(cell)
+        if len(validCells) > 18:
+            no = 1;
+        [win2,lose2] = self.block_heuristic(board,flag,(cell[1]/3) * 3,(cell[2]/3) * 3,cell[0]);
+        # print win2, lose2
+        [win3, lose3] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 0);
+        [win4, lose4] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 1);
+        board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
+        board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
+        if lose3 == 0:
+            lose3 = 4
+        if lose4 == 0:
+            lose4 = 4    
+        return 20 * (win1-win2) + 10 * (lose2 - lose1) + 100*self.count(flag,cell[0],board) + min(lose3, lose4) - 100000*no;
 
                             
     # Minimax function with alpha - beta prunnning to explore achievable states in time limit   
@@ -399,20 +448,31 @@ class bot2:
             else:
                 return float("-inf"),0
         elif checkGoal[1] == 'DRAW':
-            return -100000, 0
+            return 0, 0
 
-            
-
-        if depth == maxDepth:
-            return self.heuristic(self.who, board) , 0
 
         validCells = board.find_valid_move_cells(old_move)
-        random.shuffle(validCells)
+        # random.shuffle(validCells)
         
+        if depth == maxDepth:
+            maxv =0;
+            ind = 0;
+            for i in validCells:
+                if maxv < self.heuristic(flag,board,i):
+                    maxv = self.heuristic(flag,board,i);
+                    ind = i
+            print maxv;
+            # print self.block_heuristic(board, flag, ind[1] / 3, ind[2] / 3, ind[0])
+            return maxv , ind;
+
+
         if flag == self.who:
             isMax = 1;
         else: 
             isMax = 0;
+
+        if self.big_boards_status[old_move[0]][old_move[1]][old_move[2]] == self.who:
+            isMax = 1;
 
         if isMax:
             maxVal = float("-inf")
@@ -420,7 +480,7 @@ class bot2:
             for i in xrange(len(validCells)):
 
                 cell = validCells[i]
-                board.update(old_move, cell, flag)
+                self.update(old_move, cell, flag, board)
                 self.addMovetoHash(cell, 1)
 
                 val = self.minimax(board,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
@@ -434,6 +494,8 @@ class bot2:
                 board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
                 board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
+                if (time() - self.startTime) > self.timeLimit:
+                    return 0, validCells[0]
                 self.addMovetoHash(cell,1)
                 if beta <= alpha:
                     break
@@ -445,7 +507,7 @@ class bot2:
             for i in xrange(len(validCells)):
 
                 cell = validCells[i]
-                board.update(old_move, cell, flag)
+                self.update(old_move, cell, flag, board)
                 self.addMovetoHash(cell, 0)
 
                 val = self.minimax(board,self.oppFlag(flag),depth+1,maxDepth,alpha,beta,cell)[0]
@@ -459,6 +521,9 @@ class bot2:
                 board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
                 board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
+                if (time() - self.startTime) > self.timeLimit:
+                    return 0, validCells[0]
+                
                 self.addMovetoHash(cell,0)
                 if beta <= alpha:
                     break
@@ -469,37 +534,29 @@ class bot2:
         self.startTime = time()
 
         if old_move == (-1, -1, -1):
-            self.addMovetoHash((0 ,4, 4), 1)
-            return (0, 4, 4)
+            self.addMovetoHash((0 ,1, 1), 1)
+            return (0, 0, 0)
         else:
             if board.big_boards_status[old_move[0]][old_move[1]][old_move[2]] == self.oppFlag(flag):
                 self.addMovetoHash(old_move, 0)
 
         self.who = flag
 
-        maxDepth = 3
+        maxDepth = 1
 
         validCells = board.find_valid_move_cells(old_move)
-        random.shuffle(validCells)
+        # random.shuffle(validCells)
         bestMove = validCells[0]
 
-        # try:
-        while True:
-            self.boardHashSafeCopy = self.boardHash
-            self.blockHashSafeCopy = deepcopy(self.blockHash)
-            b = deepcopy(board)
+        self.boardHashSafeCopy = self.boardHash
+        self.blockHashSafeCopy = deepcopy(self.blockHash)
+        b = deepcopy(board)
+        if (time() - self.startTime) < self.timeLimit:
+            move = self.minimax(b, flag, 1, maxDepth, float("-inf"), float("inf"), old_move)[1]
             if (time() - self.startTime) < self.timeLimit:
-                move = self.minimax(b, flag, 0, maxDepth, float("-inf"), float("inf"), old_move)[1]
                 bestMove = move
-    	        maxDepth += 1
-            else:
-                break    
-            del b
-
-        # except Exception as e:
-        #     self.boardHash = self.boardHashSafeCopy
-        #     self.blockHash = deepcopy(self.blockHashSafeCopy)
-        #     pass
+	        maxDepth += 1   
+        del b
 
         self.addMovetoHash( bestMove, 1);
         return bestMove

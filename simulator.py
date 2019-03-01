@@ -21,7 +21,10 @@ from c2 import bot2
 from c3 import bot3
 from c4 import bot4
 from team11 import Team11
-from team8 import Player8
+from team8_2 import Player8
+from team72 import *
+from newbeg1 import *
+from quick import *
 
 TIME = 24
 MAX_PTS = 86
@@ -42,6 +45,15 @@ class Random_Player():
         #Find the list of valid cells allowed
         cells = board.find_valid_move_cells(old_move)
         return cells[random.randrange(len(cells))]
+
+class Manual_Player:
+	def __init__(self):
+		pass
+	def move(self, board, old_move, flag):
+		print 'Enter your move: <format:board row column> (you\'re playing with', flag + ")"	
+		mvp = raw_input()
+		mvp = mvp.split()
+		return (int(mvp[0]), int(mvp[1]), int(mvp[2]))
 
 
 class BigBoard:
@@ -360,7 +372,7 @@ if __name__ == '__main__':
     obj2 = ''
     option = sys.argv[1]    
     if option == '1':
-        obj1 = bot3()
+        obj1 = botq()
         obj2 = Player8()
 
     elif option == '2':
