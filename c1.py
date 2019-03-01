@@ -12,9 +12,9 @@ class bot:
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 0.01                                                                     # Maximum time for single move
+        self.timeLimit = 0.0005                                                                     # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
-        # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]               # Matrix to calculate utility for smallboard
+        # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
         self.blockHash = [[[long(0) for j in xrange(3)] for i in xrange(3)] for k in xrange(2)]   # Hash for blocks
         self.blockpoint = 9;                                                                      # Points for winning a block
@@ -69,7 +69,7 @@ class bot:
         # Player = 0 means oponent, player = 1 means us
 
         # Updating Hash for board and block
-        self.boardHash ^= self.rand_table[0][0][0][0];
+        self.boardHash ^= self.rand_table[cell[0]][cell[1]][cell[2]][player];
         self.blockHash[cell[0]][cell[1] / 3][cell[2] / 3] ^= self.rand_table[cell[0]][cell[1]][cell[2]][player];
 
     def sig_handler(self, signum, frame):
@@ -315,8 +315,7 @@ class bot:
 
         validCells = board.find_valid_move_cells(old_move)
         random.shuffle(validCells)
-        if time() - self.startTime > self.timeLimit:
-            return validCells[0]
+        
         if flag == self.who:
             isMax = 1;
         else: 
