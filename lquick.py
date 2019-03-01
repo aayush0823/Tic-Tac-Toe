@@ -6,13 +6,13 @@ import time
 import signal
 from time import time
 
-class botq:
+class botl:
 
     def __init__(self):
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 1                                                                  # Maximum time for single move
+        self.timeLimit = 5                                                                  # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
@@ -434,7 +434,7 @@ class botq:
             lose3 = 4
         if lose4 == 0:
             lose4 = 4    
-        return 30 * (win1-win2) + 10 * (lose2 - lose1) + 100*self.count(flag,cell[0],board) + min(lose3, lose4) - 100000*no;
+        return 20 * (win1-win2) + 10 * (lose2 - lose1) + 100*self.count(flag,cell[0],board) + min(lose3, lose4) - 100000*no;
 
                             
     # Minimax function with alpha - beta prunnning to explore achievable states in time limit   
@@ -542,21 +542,18 @@ class botq:
 
         self.who = flag
 
-        maxDepth = 1
-
         validCells = board.find_valid_move_cells(old_move)
         # random.shuffle(validCells)
         bestMove = validCells[0]
-
-        self.boardHashSafeCopy = self.boardHash
-        self.blockHashSafeCopy = deepcopy(self.blockHash)
-        b = deepcopy(board)
-        if (time() - self.startTime) < self.timeLimit:
-            move = self.minimax(b, flag, 1, maxDepth, float("-inf"), float("inf"), old_move)[1]
+        for maxDepth in range(1,6):
+            self.boardHashSafeCopy = self.boardHash
+            self.blockHashSafeCopy = deepcopy(self.blockHash)
+            b = deepcopy(board)
             if (time() - self.startTime) < self.timeLimit:
-                bestMove = move
-	        maxDepth += 1   
-        del b
+                move = self.minimax(b, flag, 1, maxDepth, float("-inf"), float("inf"), old_move)[1]
+                if (time() - self.startTime) < self.timeLimit:
+                    bestMove = move
+            del b
 
         self.addMovetoHash( bestMove, 1);
         return bestMove

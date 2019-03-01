@@ -16,15 +16,13 @@ import signal
 import time
 import copy
 import traceback
-from c1 import bot
-from c2 import bot2
 from c3 import bot3
-from c4 import bot4
 from team11 import Team11
-from team8_2 import Player8
+from team8 import Player8
 from team72 import *
 from newbeg1 import *
 from quick import *
+from lquick import *
 
 TIME = 24
 MAX_PTS = 86
@@ -372,8 +370,8 @@ if __name__ == '__main__':
     obj2 = ''
     option = sys.argv[1]    
     if option == '1':
-        obj1 = botq()
-        obj2 = Player8()
+        obj1 = Team11()
+        obj2 = botq()
 
     elif option == '2':
         obj1 = Random_Player()
