@@ -6,13 +6,13 @@ import time
 import signal
 from time import time
 
-class bot:
+class bot3:
 
     def __init__(self):
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 0.000005                                                                     # Maximum time for single move
+        self.timeLimit = 6                                                                  # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
@@ -195,9 +195,12 @@ class bot:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - ((self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]) ** 2)
+                        ans += - (2**(self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]))
+                        ans += - ((self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]) ** 4)
+
                     elif countp != 0 and counto == 0:    
-                        ans += ((self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) ** 2)    
+                        ans += (2**(self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) )    
+                        ans += ((self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) ** 4)
 
         #Calculation for columns
         for k in xrange(2):
@@ -214,9 +217,11 @@ class bot:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - ((self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]) ** 2)
+                        ans += - (2**(self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]))
+                        ans += - ((self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]) ** 4)
                     elif countp != 0 and counto == 0:    
-                        ans += ((self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) ** 2)    
+                        ans += (2**(self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) )    
+                        ans += ((self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) ** 4)
                         
         #Calculation for first diagonal
         for k in xrange(2):
@@ -232,9 +237,11 @@ class bot:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - ((self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]) ** 2)
+                    ans += - (2**(self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]))
+                    ans += - ((self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]) ** 4)
                 elif countp != 0 and counto == 0:    
-                    ans += ((self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]) ** 2)  
+                    ans += (2**(self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]))  
+                    ans += ((self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]) ** 4)  
                         
         #Calculation for second diagonal
         for k in xrange(2):
@@ -250,9 +257,11 @@ class bot:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - ((self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]) ** 2)
+                    ans += - (2 ** (self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]))
+                    ans += - ((self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]) ** 4)
                 elif countp != 0 and counto == 0:    
-                    ans += ((self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]) ** 2)  
+                    ans += (2 ** (self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]))  
+                    ans += ((self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]) ** 4)  
            
         return ans   
 
@@ -377,7 +386,7 @@ class bot:
                         if (self.blockHash[k][i][j], flag) in self.blockHeuriStore:
                             blockHeuristic[k][i][j] = self.blockHeuriStore[(self.blockHash[k][i][j], flag)]
                         else:
-                            blockHeuristic[k][i][j] = self.block_heuristic(board, flag, 3*i, 3*j,k);
+                            blockHeuristic[k][i][j] = self.block_heuristic(board, flag, 3*i, 3*j, k);
                             self.blockHeuriStore[(self.blockHash[k][i][j], flag)] = blockHeuristic[k][i][j];
                     blockHeuristicSum += blockHeuristic[k][i][j];                    
         
@@ -401,14 +410,15 @@ class bot:
         elif checkGoal[1] == 'DRAW':
             return -100000, 0
 
-            
-
         if depth == maxDepth:
-            return self.heuristic(self.who, board) , 0
+            return self.heuristic(self.who, board) - self.heuristic(self.oppFlag(self.who), board) , 0
 
         validCells = board.find_valid_move_cells(old_move)
         random.shuffle(validCells)
         
+        if (time() - self.startTime) > self.timeLimit:
+            return 0, validCells[0]
+
         if flag == self.who:
             isMax = 1;
         else: 
@@ -434,6 +444,8 @@ class bot:
                 board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
                 board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
+                if (time() - self.startTime) > self.timeLimit:
+                    return 0, validCells[0]
                 self.addMovetoHash(cell,1)
                 if beta <= alpha:
                     break
@@ -459,6 +471,9 @@ class bot:
                 board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
                 board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 
+                if (time() - self.startTime) > self.timeLimit:
+                    return 0, validCells[0]
+                
                 self.addMovetoHash(cell,0)
                 if beta <= alpha:
                     break
@@ -490,7 +505,8 @@ class bot:
             b = deepcopy(board)
             if (time() - self.startTime) < self.timeLimit:
                 move = self.minimax(b, flag, 0, maxDepth, float("-inf"), float("inf"), old_move)[1]
-                bestMove = move
+                if (time() - self.startTime) < self.timeLimit:
+                    bestMove = move
     	        maxDepth += 1
             else:
                 break    
@@ -502,4 +518,5 @@ class bot:
         #     pass
 
         self.addMovetoHash( bestMove, 1);
+        print time() - self.startTime
         return bestMove

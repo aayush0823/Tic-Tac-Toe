@@ -17,6 +17,11 @@ import time
 import copy
 import traceback
 from c1 import bot
+from c2 import bot2
+from c3 import bot3
+from c4 import bot4
+from team11 import Team11
+from team8 import Player8
 
 TIME = 24
 MAX_PTS = 86
@@ -355,8 +360,8 @@ if __name__ == '__main__':
     obj2 = ''
     option = sys.argv[1]    
     if option == '1':
-        obj1 = Random_Player()
-        obj2 = bot()
+        obj1 = bot3()
+        obj2 = Player8()
 
     elif option == '2':
         obj1 = Random_Player()

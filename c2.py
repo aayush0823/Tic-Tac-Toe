@@ -6,13 +6,13 @@ import time
 import signal
 from time import time
 
-class bot:
+class bot2:
 
     def __init__(self):
         
         self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
         self.startTime = 0                                                                        # Starting time of game
-        self.timeLimit = 0.000005                                                                     # Maximum time for single move
+        self.timeLimit = 0.0005                                                                     # Maximum time for single move
         self.is_bonus = 0                                                                         # Check if there is bonus move
         # self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
         self.boardHash = long(0)                                                                  # Hash for board                      
@@ -195,9 +195,9 @@ class bot:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - ((self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]) ** 2)
+                        ans += - (2**(self.blockH[0][k][i][0] - self.blockH[1][k][i][0] + self.blockH[0][k][i][1] - self.blockH[1][k][i][1] + self.blockH[0][k][i][2] - self.blockH[1][k][i][2]))
                     elif countp != 0 and counto == 0:    
-                        ans += ((self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) ** 2)    
+                        ans += (2**(self.blockH[1][k][i][0] - self.blockH[0][k][i][0] + self.blockH[1][k][i][1] - self.blockH[0][k][i][1] + self.blockH[1][k][i][2] - self.blockH[0][k][i][2]) )    
 
         #Calculation for columns
         for k in xrange(2):
@@ -214,9 +214,9 @@ class bot:
                         countd += 1
                 if countd == 0:
                     if counto != 0 and countp == 0:
-                        ans += - ((self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]) ** 2)
+                        ans += - (2**(self.blockH[0][k][0][j] - self.blockH[1][k][0][j] + self.blockH[0][k][1][j] - self.blockH[1][k][1][j] + self.blockH[0][k][2][j] - self.blockH[1][k][2][j]))
                     elif countp != 0 and counto == 0:    
-                        ans += ((self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) ** 2)    
+                        ans += (2**(self.blockH[1][k][0][j] - self.blockH[0][k][0][j] + self.blockH[1][k][1][j] - self.blockH[0][k][1][j] + self.blockH[1][k][2][j] - self.blockH[0][k][2][j]) )    
                         
         #Calculation for first diagonal
         for k in xrange(2):
@@ -232,9 +232,9 @@ class bot:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - ((self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]) ** 2)
+                    ans += - (2**(self.blockH[0][k][0][0] - self.blockH[1][k][0][0] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][2] - self.blockH[1][k][2][2]))
                 elif countp != 0 and counto == 0:    
-                    ans += ((self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]) ** 2)  
+                    ans += (2**(self.blockH[1][k][0][0] - self.blockH[0][k][0][0] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][2] - self.blockH[0][k][2][2]))  
                         
         #Calculation for second diagonal
         for k in xrange(2):
@@ -250,9 +250,9 @@ class bot:
                     countd += 1
             if countd == 0:
                 if counto != 0 and countp == 0:
-                    ans += - ((self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]) ** 2)
+                    ans += - (2 ** (self.blockH[0][k][0][2] - self.blockH[1][k][0][2] + self.blockH[0][k][1][1] - self.blockH[1][k][1][1] + self.blockH[0][k][2][0] - self.blockH[1][k][2][0]))
                 elif countp != 0 and counto == 0:    
-                    ans += ((self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]) ** 2)  
+                    ans += (2 ** (self.blockH[1][k][0][2] - self.blockH[0][k][0][2] + self.blockH[1][k][1][1] - self.blockH[0][k][1][1] + self.blockH[1][k][2][0] - self.blockH[0][k][2][0]))  
            
         return ans   
 
