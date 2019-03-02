@@ -424,19 +424,20 @@ class botq:
             dontchoose = 1;
         no =0;
         self.update([1, 1, 1], cell, flag, board)
-        checkGoal = self.find_terminal_state()
+        checkGoal = board.find_terminal_state()
+
         if checkGoal[1] == 'WON':
             if checkGoal[0] == self.who:
-                return 10000000000
+                return float("inf")
             else:
-                return -10000000000
+                return float("-inf")
 
         validCells = board.find_valid_move_cells(cell)
         if len(validCells) > 18:
             no = 1;
         for i in xrange(len(validCells)):
             self.update(cell,validCells[i],self.oppFlag(flag),board)
-            checkGoal = self.find_terminal_state()
+            checkGoal = board.find_terminal_state()
             if checkGoal[1] == 'WON':
                 if checkGoal[0] == self.who:
                     return 100000000000
@@ -446,7 +447,6 @@ class botq:
             board.small_boards_status[validCells[i][0]][validCells[i][1] / 3][validCells[i][2] / 3] = '-'
 
         [win2,lose2] = self.block_heuristic(board,flag,(cell[1]/3) * 3,(cell[2]/3) * 3,cell[0]);
-        # print win2, lose2
         [win3, lose3] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 0);
         [win4, lose4] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 1);
         board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
@@ -455,7 +455,7 @@ class botq:
             lose3 = 4
         if lose4 == 0:
             lose4 = 4    
-        return 20 * (win1-win2) + 10 * (lose2 - lose1) +self.pos_weight[cell[1]%3][cell[2]%3]+ 10*self.count(flag,cell[0],board) + min(lose3, lose4) - 100000*no -1000*dontchoose;
+        return 8 * (win1-win2) + 10 * (lose2 - lose1) + self.count(flag,cell[0],board) + 100*min(lose3, lose4) - 100000*no -1000*dontchoose;
 
                             
     # Minimax function with alpha - beta prunnning to explore achievable states in time limit   
@@ -465,11 +465,11 @@ class botq:
 
         if checkGoal[1] == 'WON':
             if checkGoal[0] == self.who:
-                return float("inf"), 0
+                return float("inf"), [0,0,0]
             else:
-                return float("-inf"),0
+                return float("-inf"),[0,0,0]
         elif checkGoal[1] == 'DRAW':
-            return 0, 0
+            return 0, [0,0,0]
 
 
         validCells = board.find_valid_move_cells(old_move)
@@ -482,7 +482,7 @@ class botq:
                 if maxv < self.heuristic(flag,board,i):
                     maxv = self.heuristic(flag,board,i);
                     ind = i
-            print maxv;
+            # print maxv;
             # print self.block_heuristic(board, flag, ind[1] / 3, ind[2] / 3, ind[0])
             return maxv , ind;
 
@@ -576,8 +576,8 @@ class botq:
             move = self.minimax(b, flag, 1, maxDepth, float("-inf"), float("inf"), old_move)[1]
             if (time() - self.startTime) < self.timeLimit:
                 bestMove = move
-            maxDepth += 1   
+	        maxDepth += 1   
         del b
 
-        self.addMovetoHash( bestMove, 1);
+        # self.addMovetoHash( bestMove, 1);
         return bestMove

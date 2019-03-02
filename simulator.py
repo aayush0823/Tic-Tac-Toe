@@ -19,10 +19,11 @@ import traceback
 from c3 import bot3
 from team11 import Team11
 from team8 import Player8
-from team72 import *
-from newbeg1 import *
+from team72v3 import Team72v3
+from newbeg1 import Team162
 from quick import *
-from lquick import *
+from nquick import *
+from team7 import Team7
 
 TIME = 24
 MAX_PTS = 86
@@ -214,6 +215,7 @@ def player_turn(game_board, old_move, obj, ply, opp, flg):
 
         try:                                    #try to get player 1's move         
             p_move = obj.move(game_board, old_move, flg)
+            print p_move
         except TimedOutExc:                 #timeout error
 #           print e
             WINNER = opp
@@ -370,8 +372,8 @@ if __name__ == '__main__':
     obj2 = ''
     option = sys.argv[1]    
     if option == '1':
+        obj2 = botnq()
         obj1 = Team11()
-        obj2 = botq()
 
     elif option == '2':
         obj1 = Random_Player()
