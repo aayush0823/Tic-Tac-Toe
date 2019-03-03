@@ -6,13 +6,13 @@ import time
 import signal
 from time import time
 
-class botq:
+class Team41:
 
 	def __init__(self):
 		
 		self.pos_weight = ((4, 6, 4),(6, 3, 6),(4, 6, 4))                                         # Predefined weight of winning smallboard[i][j]
 		self.startTime = 0                                                                        # Starting time of game
-		self.timeLimit = 2                                                                  # Maximum time for single move
+		self.timeLimit = 1                                                                  # Maximum time for single move
 		self.is_bonus = 0                                                                         # Check if there is bonus move
 		# self.Util_Matrix = [[1, 0, 0, 0],[3, 0, 0, 0],[9, 0, 0, 0],[27, 0, 0, 0]]                 # Matrix to calculate utility for smallboard
 		self.boardHash = long(0)                                                                  # Hash for board                      
@@ -417,7 +417,6 @@ class botq:
 		dontchoose = 0;
 		if win1 == 4 and lose1 == 4:
 			dontchoose = 1;
-		no =0;
 		prev = self.count1(board)
 		self.update([1, 1, 1], cell, flag, board)
 		new = self.count1(board)
@@ -456,29 +455,21 @@ class botq:
 						else:
 							return -100000000000
 					del board2
-					# board.big_boards_status[valid[j][0]][valid[j][1]][valid[j][2]] = '-'
-					# board.small_boards_status[valid[j][0]][valid[j][1] / 3][valid[j][2] / 3] = '-'
 			del board1
-			# board.big_boards_status[validCell[i][0]][validCell[i][1]][validCell[i][2]] = '-'
-			# board.small_boards_status[validCell[i][0]][validCell[i][1] / 3][validCell[i][2] / 3] = '-'
 
 		[win2,lose2] = self.block_heuristic(board,flag,(cell[1]/3) * 3,(cell[2]/3) * 3,cell[0]);
 		[win3, lose3] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 0);
 		[win4, lose4] = self.block_heuristic(board,flag,(cell[1] % 3) * 3,(cell[2] % 3) * 3, 1);
-		# board.big_boards_status[cell[0]][cell[1]][cell[2]] = '-'
-		# board.small_boards_status[cell[0]][cell[1] / 3][cell[2] / 3] = '-'
 		if lose3 == 0:
 			lose3 = 4
 		if lose4 == 0:
 			lose4 = 4
-		return 20 * (win1-win2) + 10 * (lose2 - lose1) + 10*self.count(flag,cell[0],board) + min(lose3, lose4) - 100000*no -1000*dontchoose +1000*mybonus;
+		return 12 * (win1-win2) + 10 * (lose2 - lose1) + 10*self.count(flag,cell[0],board) + 10*min(lose3, lose4) -1000*dontchoose;
 							
 	# Minimax function with alpha - beta prunnning to explore achievable states in time limit   
 	def minimax(self, board, flag, depth, maxDepth, alpha, beta, old_move):
-		validCells = board.find_valid_move_cells(old_move)
 
-		if (time() - self.startTime) > self.timeLimit:
-					return 0, validCells[0]
+		validCells = board.find_valid_move_cells(old_move)
 		checkGoal = self.find_terminal_state(board)
 
 		if checkGoal[1] == 'WON':
@@ -498,7 +489,6 @@ class botq:
 					maxv = heurist;
 					ind = i
 			return maxv , validCells[ind];
-
 
 		if flag == self.who:
 			isMax = 1;
@@ -575,25 +565,22 @@ class botq:
 
 		self.who = flag
 
-		maxDepth = 20
+		maxDepth = 1
 
 		validCells = board.find_valid_move_cells(old_move)
 		# random.shuffle(validCells)
 		bestMove = validCells[0]
-		self.boardHashSafeCopy = self.boardHash
-		self.blockHashSafeCopy = deepcopy(self.blockHash)
 		try:
-			for i in range(1,maxDepth):
-				b = deepcopy(board)
+			self.boardHashSafeCopy = self.boardHash
+			self.blockHashSafeCopy = deepcopy(self.blockHash)
+			b = deepcopy(board)
+			if (time() - self.startTime) < self.timeLimit:
+				move = self.minimax(b, flag, 1, maxDepth, float("-inf"), float("inf"), old_move)[1]
 				if (time() - self.startTime) < self.timeLimit:
-					move = self.minimax(b, flag, 1, i, float("-inf"), float("inf"), old_move)[1]
-					if (time() - self.startTime) < self.timeLimit:
-						bestMove = move
-					else:
-						break
-				del b
+					bestMove = move
+				maxDepth += 1   
+			del b
+			self.addMovetoHash( bestMove, 1);
 		except:
 			pass
-
-		self.addMovetoHash( bestMove, 1);
 		return bestMove
