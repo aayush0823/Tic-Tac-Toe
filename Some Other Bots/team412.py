@@ -6,7 +6,7 @@ import time
 import signal
 from time import time
 
-class Team41:
+class Team412:
 
 	def __init__(self):
 		
@@ -429,6 +429,7 @@ class Team41:
 
 		oppbonus = 0;
 		validCell = board.find_valid_move_cells(cell)
+		random.shuffle(validCell)
 
 		if len(validCell) > 18:
 			return -10000000000
@@ -446,6 +447,7 @@ class Team41:
 					return -100000000000
 			if newopp - prevopp > 0:
 				valid = board1.find_valid_move_cells(validCell[i])
+				random.shuffle(valid)
 				for j in xrange(len(valid)):
 					board2 = deepcopy(board1)
 					self.update(validCell[i],valid[j],self.oppFlag(flag),board2)

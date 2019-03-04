@@ -21,6 +21,7 @@ from team11 import Team11
 from team8 import Player8
 from team72v3 import Team72v3
 from team41 import Team41
+from team413 import Team413
 from nquick import *
 from team7 import Team7
 from team10 import Team10
@@ -28,6 +29,7 @@ from team60 import Team60
 from player_final import *
 from end22 import Team1655
 from team36 import Team36
+from main import player
 
 TIME = 24
 MAX_PTS = 86
@@ -375,8 +377,8 @@ if __name__ == '__main__':
     obj2 = ''
     option = sys.argv[1]    
     if option == '1':
-        obj1 = Random_Player()
-        obj2 = Team41()
+        obj1 = Team41()
+        obj2 = Team413()
 
     elif option == '2':
         obj1 = Random_Player()
